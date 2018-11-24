@@ -31,9 +31,14 @@ namespace System.Web
 			var query = HttpUtility.ParseQueryString(uriBuilder.Query);
 
 			if (query.AllKeys.Contains(paramName))
+			{
 				query[paramName] = paramValue;
+			}
 			else
+			{
 				query.Add(paramName, paramValue);
+			}
+
 			uriBuilder.Query = query.ToString();
 			return uriBuilder.Uri;
 		}

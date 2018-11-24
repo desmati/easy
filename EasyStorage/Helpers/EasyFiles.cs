@@ -19,5 +19,34 @@
 			File.WriteAllBytes(filePath, fileBytes);
 			return fileName;
 		}
+
+		public static void SaveAsJson(this object obj, string Path)
+		{
+			var json = obj.ToJson();
+			File.WriteAllText(Path, json);
+		}
+
+		public static T JsonFileToObject<T>(this string Path)
+		{
+			if (string.IsNullOrEmpty(Path) || !File.Exists(Path))
+			{
+				return default(T);
+			}
+
+			var json = File.ReadAllText(Path);
+			if (string.IsNullOrEmpty(json))
+			{
+				return default(T);
+			}
+
+			try
+			{
+				return json.FromJson<T>();
+			}
+			catch
+			{
+				return default(T);
+			}
+		}
 	}
 }
