@@ -1,0 +1,136 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using iTours.Api.Common;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using System.Text.Encodings.Web;
+using Microsoft.Net.Http.Headers;
+using System.Security.Claims;
+
+namespace iTours.Api.Common
+{
+    public class iAuthorize
+    {
+        public const string iToursApiConsumer = "iToursApiConsumer";
+    }
+    public class CustomAuthHandler : AuthenticationHandler<CustomAuthOptions>
+    {
+        public CustomAuthHandler(IOptionsMonitor<CustomAuthOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+            : base(options, logger, encoder, clock)
+        {
+            // store custom services here...
+        }
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            var identity = new ClaimsIdentity("iToursClaimIdentity");
+            identity.AddClaim(new Claim("Consumer", "True"));
+            var identities = new List<ClaimsIdentity> { identity };
+            var ticket = new AuthenticationTicket(new ClaimsPrincipal(identities), iAuthorize.iToursApiConsumer);
+            //User.AddIdentity(identity);
+            return await Task.FromResult(AuthenticateResult.Success(ticket));
+        }
+    }
+    public class iToursApiConsumerHandler : AuthorizationHandler<iToursApiConsumerRequirement>
+    {
+        protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, iToursApiConsumerRequirement requirement)
+        {
+            HttpRequest request = null;
+            var mvcContext = context?.Resource as AuthorizationFilterContext;
+            if (mvcContext != null) request = mvcContext?.HttpContext?.Request;
+            var hmac = ""; try { hmac = (request.Headers["Authorization"] + "").Replace("Bearer ", "").Replace("bearer ", ""); } catch { }
+            if (string.IsNullOrEmpty(hmac) || !hmac.Contains(":")) context.Fail();
+            var parts = (hmac + "::").Split(':');
+            var id = 0; int.TryParse(parts[0] + "", out id);
+            if (id <= 0) context.Fail();
+            var signiture = parts[1];
+            if (string.IsNullOrEmpty(signiture)) context.Fail();
+            var data = (await DataStore.Tokents.FindAsync(x => x.Token == hmac))?.FirstOrDefault();
+            if (data != null && data.IsUser) context.Succeed(requirement);
+            else
+            {
+
+                var response = mvcContext?.HttpContext?.Response;
+                if (response != null)
+                {
+                    response.Clear();
+                    await response.WriteAsync("Invalid Token");
+                    if (!response.HasStarted)
+                    {
+                        response.StatusCode = 200;
+                        response.ContentType = "plain/text";
+                    }
+                }
+
+                context.Fail();
+            }
+
+        }
+    }
+
+    public class iToursApiConsumerRequirement : IAuthorizationRequirement
+    {
+
+    }
+
+    public static class AuthenticationBuilderExtensions
+    {
+        // Custom authentication extension method
+        public static AuthenticationBuilder AddCustomAuthorization(this AuthenticationBuilder builder, Action<CustomAuthOptions> configureOptions)
+        {
+            // Add custom authentication scheme with custom options and custom handler
+            return builder.AddScheme<CustomAuthOptions, CustomAuthHandler>(CustomAuthOptions.DefaultScheme, configureOptions);
+        }
+    }
+
+    public class CustomAuthOptions : AuthenticationSchemeOptions
+    {
+        public static string DefaultScheme { get; set; } = iAuthorize.iToursApiConsumer;
+        public CustomAuthOptions()
+        {
+
+        }
+    }
+
+
+
+    public class AuthModel
+    {
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public string CompanyToken { get; set; }
+        public string Culture { get; set; }
+    }
+    public class AuthResult : iStorableObject
+    {
+        public string UserName { get; set; }
+        public string SurName { get; set; }
+        public string GivenName { get; set; }
+        public long CompanyId { get; set; }
+        public string CompanyName { get; set; }
+        public bool IsUser { get; set; }
+        public string Token { get; set; }
+        public List<UserRole> Roles { get; set; }
+        public long UserId { get; set; }
+        /// <summary>
+        /// توکن کمپانی که با سالت زیر هش شده است:
+        /// (CompanyToken + ":fg76sg79d0dj20dfh939vv9e").ToMD5()
+        /// </summary>
+        public string CompanyTokenHash { get; set; }
+
+        private bool CheckCompanyToken(string companyTokenHash) => CompanyTokenHash == (companyTokenHash + ":fg76sg79d0dj20dfh939vv9e").Md5();
+
+        public async Task<AuthResult> PassCompanyAccess(AuthModel model)
+        {
+            var result = CheckCompanyToken(model.CompanyToken) ? this : new AuthResult();
+            await DataStore.Tokents.SaveAsync(result);
+            return result;
+        }
+    }
+}
+

@@ -15,7 +15,7 @@ namespace System.Data
 			try { if (!Directory.Exists(StoragePath)) { Directory.CreateDirectory(StoragePath); } } catch { }
 		}
 
-		public async Task<Guid> SaveAsync(IEasyStorableObject<Guid> obj)
+		public async Task<Guid> SaveAsync(EasyStorableObject<Guid> obj)
 		{
 			if (obj == null)
 			{

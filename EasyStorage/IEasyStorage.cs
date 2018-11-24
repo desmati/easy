@@ -5,7 +5,7 @@ namespace System.Data
 {
 	public interface IEasyStorage<TEntity, TEntityId>
 	{
-		Task<TEntityId> SaveAsync(IEasyStorableObject<TEntityId> obj);
+		Task<TEntityId> SaveAsync(EasyStorableObject<TEntityId> obj);
 
 		Task<TEntity> LoadAsync(TEntityId id);
 

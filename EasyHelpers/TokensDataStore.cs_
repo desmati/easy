@@ -1,0 +1,29 @@
+﻿using iTours.Api.Common;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace iTours.Api.Common
+{
+    public static partial class DataStore
+    {
+        private static AuthStorage tokens { get; set; }
+        public static AuthStorage Tokents
+        {
+            get
+            {
+                string StoragePath = Path.Combine(iConfig.StorageLocation, "iTours.Api.Sepehr", "Tokens");
+                if (tokens != null) return tokens;
+                if (!Directory.Exists(StoragePath)) try { Directory.CreateDirectory(StoragePath); } catch { }
+                return tokens = new AuthStorage(StoragePath);
+            }
+        }
+    }
+
+    public class AuthStorage : iFileStorage<AuthResult>
+    {
+        public AuthStorage(string StoragePath) : base(StoragePath) { }
+    }
+}
