@@ -6,6 +6,13 @@ namespace System.Web
 	{
 		private NameValueCollection inputs = new NameValueCollection();
 
+		public EasyHtmlFormGenerator(string url, string method = "POST", string formName = "form1")
+		{
+			Method = method;
+			FormName = formName;
+			Url = url;
+		}
+
 		public string Create()
 		{
 			var r = "";

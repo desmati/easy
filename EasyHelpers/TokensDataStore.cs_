@@ -1,11 +1,11 @@
-﻿using iTours.Api.Common;
+﻿using easy.Api.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace iTours.Api.Common
+namespace easy.Api.Common
 {
     public static partial class DataStore
     {
@@ -14,7 +14,7 @@ namespace iTours.Api.Common
         {
             get
             {
-                string StoragePath = Path.Combine(iConfig.StorageLocation, "iTours.Api.Sepehr", "Tokens");
+                string StoragePath = Path.Combine(iConfig.StorageLocation, "easy.Api.Sepehr", "Tokens");
                 if (tokens != null) return tokens;
                 if (!Directory.Exists(StoragePath)) try { Directory.CreateDirectory(StoragePath); } catch { }
                 return tokens = new AuthStorage(StoragePath);

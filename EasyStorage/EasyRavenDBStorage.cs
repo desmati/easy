@@ -1,6 +1,7 @@
 ﻿using Raven.Client.Documents;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace System.Data
@@ -12,7 +13,7 @@ namespace System.Data
 			RavenDbDocumentStoreHolder.Init(Url, Database);
 		}
 
-		public async Task<string> SaveAsync(EasyStorableObject<string> obj)
+		public virtual async Task<string> SaveAsync(EasyStorableObject<string> obj)
 		{
 			if (obj == null)
 			{
@@ -32,7 +33,7 @@ namespace System.Data
 			return obj.Id;
 		}
 
-		public async Task<TEntity> LoadAsync(string id)
+		public virtual async Task<TEntity> LoadAsync(string id)
 		{
 			try
 			{
@@ -47,37 +48,22 @@ namespace System.Data
 			}
 		}
 
-		public async Task<TResult> LoadAsync<TResult>(string id)
+		public virtual async Task DeleteAsync(string id)
 		{
-			try
+			using (var ctx = RavenDbDocumentStoreHolder.Store.OpenAsyncSession())
 			{
-				using (var ctx = RavenDbDocumentStoreHolder.Store.OpenAsyncSession())
-				{
-					return await ctx.LoadAsync<TResult>(id);
-				}
-			}
-			catch
-			{
-				return default(TResult);
-			}
-		}
-
-		public void Delete(string id)
-		{
-			using (var ctx = RavenDbDocumentStoreHolder.Store.OpenSession())
-			{
-				var doc = ctx.Load<TEntity>(id);
+				var doc = ctx.LoadAsync<TEntity>(id);
 				ctx.Delete(id);
-				ctx.SaveChanges();
+				await ctx.SaveChangesAsync();
 			}
 		}
 
-		public async Task<List<TEntity>> AllAsync()
+		public virtual async Task<List<TEntity>> AllAsync()
 		{
 			var r = new List<TEntity>();
 			await Task.Run(() =>
 			{
-				using (var ctx = RavenDbDocumentStoreHolder.Store.OpenAsyncSession())
+				using (var ctx = RavenDbDocumentStoreHolder.Store.OpenSession())
 				{
 					r = ctx.Query<TEntity>()?.Take(9999)?.ToList() ?? new List<TEntity>();
 				}
@@ -85,7 +71,7 @@ namespace System.Data
 			return r;
 		}
 
-		public async Task<List<TEntity>> FindAsync(Func<TEntity, bool> predicate)
+		public virtual async Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
 		{
 			var r = new List<TEntity>();
 			await Task.Run(() =>
@@ -98,14 +84,54 @@ namespace System.Data
 			return r;
 		}
 
-		public async Task<List<TResult>> FindAsync<TResult>(Func<TEntity, bool> predicate)
+		public virtual async Task<EasyPaging<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
 		{
-			var r = new List<TResult>();
+			var r = new EasyPaging<TEntity>(pageNumber, pageSize);
 			var list = await FindAsync(predicate);
-			return list.Select<TEntity, TResult>(x => EasyMapper.MapTo<TResult>(x))?.ToList() ?? new List<TResult>();
+			r.Count = list.Count;
+			r.Rows = list
+				?.Skip((pageNumber - 1) * pageSize)
+				?.Take(pageSize)
+				?.ToList()
+			?? new List<TEntity>();
+			return r;
 		}
 
+		public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+		{
+			var rows = await FindAsync(predicate);
+			return rows != null ? rows.FirstOrDefault() : default(TEntity);
+		}
 
+		public virtual string Save(EasyStorableObject<string> obj)
+		{
+			return SaveAsync(obj).GetAwaiter().GetResult();
+		}
+
+		public virtual TEntity Load(string id)
+		{
+			return LoadAsync(id).GetAwaiter().GetResult();
+		}
+
+		public virtual void Delete(string id)
+		{
+			DeleteAsync(id).Wait();
+		}
+
+		public virtual List<TEntity> All()
+		{
+			return AllAsync().GetAwaiter().GetResult();
+		}
+
+		public virtual EasyPaging<TEntity> Find(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
+		{
+			return FindAsync(predicate, pageNumber, pageSize).GetAwaiter().GetResult();
+		}
+
+		public virtual List<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FindAsync(predicate).GetAwaiter().GetResult();
+		}
 
 		public IDocumentStore Store => RavenDbDocumentStoreHolder.Store;
 
@@ -139,7 +165,10 @@ namespace System.Data
 				return store;
 			}
 		}
+
+		public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FirstOrDefaultAsync(predicate).GetAwaiter().GetResult();
+		}
 	}
-
-
 }

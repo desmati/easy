@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using iTours.Api.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
@@ -13,11 +12,10 @@ using System.Text.Encodings.Web;
 using Microsoft.Net.Http.Headers;
 using System.Security.Claims;
 
-namespace iTours.Api.Common
 {
     public class iAuthorize
     {
-        public const string iToursApiConsumer = "iToursApiConsumer";
+        public const string easyApiConsumer = "easyApiConsumer";
     }
     public class CustomAuthHandler : AuthenticationHandler<CustomAuthOptions>
     {
@@ -28,17 +26,17 @@ namespace iTours.Api.Common
         }
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var identity = new ClaimsIdentity("iToursClaimIdentity");
+            var identity = new ClaimsIdentity("easyClaimIdentity");
             identity.AddClaim(new Claim("Consumer", "True"));
             var identities = new List<ClaimsIdentity> { identity };
-            var ticket = new AuthenticationTicket(new ClaimsPrincipal(identities), iAuthorize.iToursApiConsumer);
+            var ticket = new AuthenticationTicket(new ClaimsPrincipal(identities), iAuthorize.easyApiConsumer);
             //User.AddIdentity(identity);
             return await Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
-    public class iToursApiConsumerHandler : AuthorizationHandler<iToursApiConsumerRequirement>
+    public class easyApiConsumerHandler : AuthorizationHandler<easyApiConsumerRequirement>
     {
-        protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, iToursApiConsumerRequirement requirement)
+        protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, easyApiConsumerRequirement requirement)
         {
             HttpRequest request = null;
             var mvcContext = context?.Resource as AuthorizationFilterContext;
@@ -73,7 +71,7 @@ namespace iTours.Api.Common
         }
     }
 
-    public class iToursApiConsumerRequirement : IAuthorizationRequirement
+    public class easyApiConsumerRequirement : IAuthorizationRequirement
     {
 
     }
@@ -90,7 +88,7 @@ namespace iTours.Api.Common
 
     public class CustomAuthOptions : AuthenticationSchemeOptions
     {
-        public static string DefaultScheme { get; set; } = iAuthorize.iToursApiConsumer;
+        public static string DefaultScheme { get; set; } = iAuthorize.easyApiConsumer;
         public CustomAuthOptions()
         {
 

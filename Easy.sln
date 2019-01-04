@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyHelpers", "EasyHelpers\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyWeb", "EasyWeb\EasyWeb.csproj", "{A45778F5-7574-42DC-93E1-1E055ECF13DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyLocalizer", "EasyLocalizer\EasyLocalizer.csproj", "{E3C2B6C9-54C6-4E96-BC62-3A188CC5DD4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyLocalizer", "EasyLocalizer\EasyLocalizer.csproj", "{E3C2B6C9-54C6-4E96-BC62-3A188CC5DD4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyIdentity", "EasyIdentity\EasyIdentity.csproj", "{AB0F0475-8EF2-40D2-A6D7-34555E30F0EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyIdentity", "EasyIdentity\EasyIdentity.csproj", "{AB0F0475-8EF2-40D2-A6D7-34555E30F0EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyPayment", "EasyPayment\EasyPayment.csproj", "{440FCDD9-0788-4CAD-A54A-BA08BF57BBC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{AB0F0475-8EF2-40D2-A6D7-34555E30F0EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB0F0475-8EF2-40D2-A6D7-34555E30F0EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB0F0475-8EF2-40D2-A6D7-34555E30F0EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{440FCDD9-0788-4CAD-A54A-BA08BF57BBC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{440FCDD9-0788-4CAD-A54A-BA08BF57BBC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{440FCDD9-0788-4CAD-A54A-BA08BF57BBC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{440FCDD9-0788-4CAD-A54A-BA08BF57BBC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

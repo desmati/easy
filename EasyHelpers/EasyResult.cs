@@ -6,7 +6,7 @@
 		public string Message { get; set; }
 		public int StatusCode { get; set; }
 
-		public EasyResult Success(string message, int statusCode = 200)
+		public static EasyResult Success(string message, int statusCode = 200)
 		{
 			return new EasyResult()
 			{
@@ -16,13 +16,23 @@
 			};
 		}
 
-		public EasyResult Failure(string message, int statusCode = 400)
+		public static EasyResult Failure(string message, int statusCode = 400)
 		{
 			return new EasyResult()
 			{
 				Message = message,
 				Succeed = false,
 				StatusCode = statusCode
+			};
+		}
+
+		public static EasyResult Failure(Exception exception)
+		{
+			return new EasyResult()
+			{
+				Message = exception.Message + " | " + exception.InnerException?.Message,
+				Succeed = false,
+				StatusCode = 400
 			};
 		}
 	}
@@ -35,7 +45,7 @@
 
 		public int StatusCode { get; set; }
 
-		public EasyResult<T> Success(string message, T data = default(T), int statusCode = 200)
+		public static EasyResult<T> Success(string message, T data = default(T), int statusCode = 200)
 		{
 			return new EasyResult<T>()
 			{
@@ -46,7 +56,7 @@
 			};
 		}
 
-		public EasyResult<T> Failure(string message, T data = default(T), int statusCode = 400)
+		public static EasyResult<T> Failure(string message, T data = default(T), int statusCode = 400)
 		{
 			return new EasyResult<T>()
 			{
@@ -54,6 +64,17 @@
 				Message = message,
 				Succeed = false,
 				StatusCode = statusCode
+			};
+		}
+
+		public static EasyResult<T> Failure(Exception exception)
+		{
+			return new EasyResult<T>()
+			{
+				Data = default(T),
+				Message = exception.Message + " | " + exception.InnerException?.Message,
+				Succeed = false,
+				StatusCode = 400
 			};
 		}
 	}

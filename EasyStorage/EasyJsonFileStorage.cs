@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace System.Data
 {
-	public abstract class EasyJsonFileStorage<TEntity> : IEasyStorage<TEntity, Guid>
+	public abstract class EasyJsonFileStorage<TEntity, TKey> : IEasyStorage<TEntity, TKey>
 	{
 		private string _StoragePath { get; set; }
 		public EasyJsonFileStorage(string StoragePath)
@@ -15,23 +16,40 @@ namespace System.Data
 			try { if (!Directory.Exists(StoragePath)) { Directory.CreateDirectory(StoragePath); } } catch { }
 		}
 
-		public async Task<Guid> SaveAsync(EasyStorableObject<Guid> obj)
+		public async Task<TKey> SaveAsync(EasyStorableObject<TKey> obj)
 		{
 			if (obj == null)
 			{
-				return Guid.Empty;
+				return default(TKey);
 			}
 
-			if (obj.Id.Equals(Guid.Empty))
+			var keyType = typeof(TKey);
+			if (keyType == typeof(Guid))
 			{
-				obj.Id = Guid.NewGuid();
+				var objId = (Guid)Convert.ChangeType(obj.Id, typeof(Guid));
+				if (objId == null || objId == Guid.Empty)
+				{
+					var id = Guid.NewGuid();
+					obj.Id = (TKey)Convert.ChangeType(id, keyType);
+				}
+			}
+
+			if (keyType == typeof(long))
+			{
+
+				var objId = (long)Convert.ChangeType(obj.Id, typeof(long));
+				if (objId <= 0)
+				{
+					var id = EasyAutoIncreament.NextId(nameof(TEntity), _StoragePath);
+					obj.Id = (TKey)Convert.ChangeType(id, keyType);
+				}
 			}
 
 			await File.WriteAllTextAsync(Path.Combine(_StoragePath, obj.Id + ".json"), JsonConvert.SerializeObject(obj));
 			return obj.Id;
 		}
 
-		public async Task<TEntity> LoadAsync(Guid id)
+		public async Task<TEntity> LoadAsync(TKey id)
 		{
 			try
 			{
@@ -43,7 +61,7 @@ namespace System.Data
 			}
 		}
 
-		public async Task<TResult> LoadAsync<TResult>(Guid id)
+		public async Task<TResult> LoadAsync<TResult>(TKey id)
 		{
 			try
 			{
@@ -55,9 +73,12 @@ namespace System.Data
 			}
 		}
 
-		public void Delete(Guid id)
+		public async Task DeleteAsync(TKey id)
 		{
-			File.Move(Path.Combine(_StoragePath, id + ".json"), Path.Combine(_StoragePath, id + ".deleted"));
+			await Task.Run(() =>
+			{
+				File.Move(Path.Combine(_StoragePath, id + ".json"), Path.Combine(_StoragePath, id + ".deleted"));
+			});
 		}
 
 		public async Task<List<TEntity>> AllAsync()
@@ -70,13 +91,63 @@ namespace System.Data
 				ids = files.Select(x => Path.GetFileNameWithoutExtension(x))?.ToList() ?? new List<string>();
 			}
 
-			await ids.ForEachAsync(async id => r.Add(await LoadAsync(Guid.Parse(id))));
+			await ids.ForEachAsync(async id => r.Add(await LoadAsync((TKey)Convert.ChangeType(id, typeof(TKey)))));
 			return r;
 		}
 
-		public async Task<List<TEntity>> FindAsync(Func<TEntity, bool> predicate)
+		public async Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
 		{
-			return (await AllAsync() ?? new List<TEntity>())?.Where(predicate)?.ToList() ?? new List<TEntity>();
+			return (await AllAsync() ?? new List<TEntity>())?.AsQueryable()?.Where(predicate)?.ToList() ?? new List<TEntity>();
+		}
+
+		public async Task<EasyPaging<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
+		{
+			var result = new EasyPaging<TEntity>(pageNumber, pageSize);
+			var rows = await FindAsync(predicate);
+			result.Count = rows?.Count() ?? 0;
+			result.Rows = rows.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+			return result;
+		}
+
+		public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+		{
+			var rows = await FindAsync(predicate);
+			return rows != null ? rows.FirstOrDefault() : default(TEntity);
+		}
+
+		public TKey Save(EasyStorableObject<TKey> obj)
+		{
+			return SaveAsync(obj).GetAwaiter().GetResult();
+		}
+
+		public TEntity Load(TKey id)
+		{
+			return LoadAsync(id).GetAwaiter().GetResult();
+		}
+
+		public void Delete(TKey id)
+		{
+			DeleteAsync(id).Wait();
+		}
+
+		public List<TEntity> All()
+		{
+			return AllAsync().GetAwaiter().GetResult();
+		}
+
+		public EasyPaging<TEntity> Find(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
+		{
+			return FindAsync(predicate, pageNumber, pageSize).GetAwaiter().GetResult();
+		}
+
+		public List<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FindAsync(predicate).GetAwaiter().GetResult();
+		}
+
+		public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FirstOrDefaultAsync(predicate).GetAwaiter().GetResult();
 		}
 	}
 }

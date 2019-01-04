@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EasyPayment</name>
+    </assembly>
+    <members>
+        <member name="M:EasyPayment.Abstraction.IPaymentProvider.RequestPayment(EasyPayment.Data.Entities.PaymentRequest)">
+            <summary>
+            درخواست پرداخت
+            </summary>
+            <param name="paymentRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EasyPayment.Abstraction.IPaymentProvider.ProceedToPayment(EasyPayment.Data.Entities.PaymentEntity)">
+            <summary>
+            شروع عملیات پرداخت
+            </summary>
+        </member>
+        <member name="M:EasyPayment.Abstraction.IPaymentProvider.FinalizePayment(EasyPayment.Data.Entities.PaymentEntity)">
+            <summary>
+            نهایی کردن پرداخت پس از اتمام عملیات توسط روش پرداخت انتخاب شده
+            </summary>
+        </member>
+        <member name="T:EasyPayment.Controllers.PaymentRequestController">
+            <summary>
+            مرحله 1- ثبت درخواست پرداخت و دریافت یک توکن جهت ادامه مراحل
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:EasyPayment.Controllers.ProceedToPaymentController" -->
+        <member name="T:EasyPayment.Data.Entities.PaymentEntity">
+            <summary>
+            کل سابقه یک رداخت، از ابتدای درخواست تا انتهای آن در این کلاس نگهداری می شود.    /// </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.Token">
+            <summary>
+            کد یکتای این پرداخت که ادامه، عملیات پرداخت با استفاده از آن پیگیری می شود.
+            پس از اینکه ارسال کننده درخواست پرداخت، این کد را دریافت کرد، 
+            می بایست آن را در جایی ثبت کند و همراه سایر درخواست هایش ارسال کند.
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.Request">
+            <summary>
+            درخواست پرداخت انجام شده
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.Methods">
+            <summary>
+            روش های پرداختی که به کاربر پیشنهاد شده است.
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.SelectedMethod">
+            <summary>
+            روش پرداختی که کاربر انتخاب شده است
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.Proceed">
+            <summary>
+            درخواست آغاز عملیات پرداخت
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.ResponseParameters">
+            <summary>
+            پارامترهای بازگشتی از روش پرداخت انتخاب شده
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.RequestParameters">
+            <summary>
+            پارامترهایی که باید به آدرس یو آر ال متود انتخابی پست شوند.
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentEntity.TransactionId">
+            <summary>
+            کد تراکنشی که بانک بر می گرداند
+            </summary>
+        </member>
+        <member name="T:EasyPayment.Data.Entities.PaymentMethod">
+            <summary>
+            روش های پرداخت
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Id">
+            <summary>
+            کد روش پرداخت از لیست زیر:
+            BPM
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Name">
+            <summary>
+            نام بانک یا روش پرداخت
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Logo">
+            <summary>
+            لوگو بانک یا روش پرداخت:
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Comment">
+            <summary>
+            توضیح در مورد روش پرداخت
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Url">
+            <summary>
+            آدرسی که درخواست کننده برای انجام پرداخت باید به آن هدایت شود.
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentMethod.Methods">
+            <summary>
+            روش های پرداخت فعلی سیستم
+            </summary>
+        </member>
+        <member name="T:EasyPayment.Data.Entities.PaymentRequest">
+            <summary>
+            درخواست پرداخت
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentRequest.Amount">
+            <summary>
+            مبلغ
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentRequest.ISOCurrencyCode">
+            <summary>
+            واحد پول
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentRequest.UserId">
+            <summary>
+            کد کاربر درخواست کننده
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentRequest.ContractId">
+            <summary>
+            شماره قرارداد یا صورت حساب مربوطه که این پرداخت باید برای آن انجام شود.
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.PaymentRequest.UserBalance">
+            <summary>
+            موجودی حساب کمپانی کاربر پیش ما در لحظه ای که درخواست پرداخت کرده. 
+            این پارامتر را خودمان پر می کنیم.
+            </summary>
+        </member>
+        <member name="T:EasyPayment.Data.Entities.ProceedToPaymentRequest">
+            <summary>
+            درخواست شروع عملیات پرداخت به روش انتخاب شده
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.ProceedToPaymentRequest.SelectedPaymentMethodId">
+            <summary>
+            کد روش انتخاب شده
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.ProceedToPaymentRequest.Token">
+            <summary>
+            کد یکتای پاسخ درخواست پرداخت که در مراحل قبل به درخواست کننده داده شده بود
+            </summary>
+        </member>
+        <member name="P:EasyPayment.Data.Entities.ProceedToPaymentRequest.CallbackUrl">
+            <summary>
+            آدرسی که پس از اتمام عملیات پرداخت، نتیجه به آن ارسال می شود.
+            </summary>
+        </member>
+        <member name="F:EasyPayment.Data.Enumerables.PaymentMethods.BPM">
+            <summary>
+            به پرداخت ملت
+            </summary>
+        </member>
+        <member name="F:EasyPayment.Data.Enumerables.PaymentStatus.JustRequested">
+            <summary>
+            درخواست ارسال شده و منتظر انتخاب روش پرداخت توسط کاربر
+            </summary>
+        </member>
+        <member name="F:EasyPayment.Data.Enumerables.PaymentStatus.Proceeding">
+            <summary>
+            درخواست شروع عملیات ارسال شده
+            </summary>
+        </member>
+        <member name="F:EasyPayment.Data.Enumerables.PaymentStatus.Successful">
+            <summary>
+            عملیات پرداخت تمام شده
+            </summary>
+        </member>
+    </members>
+</doc>

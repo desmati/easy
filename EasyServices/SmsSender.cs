@@ -8,5 +8,10 @@ namespace Services
 		{
 			return Task.CompletedTask;
 		}
+
+		public Task SendSmsAsync(string number, string template, params string[] parameters)
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

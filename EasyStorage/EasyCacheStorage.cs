@@ -2,12 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Data
 {
-	public abstract class IEasyCacheStorage<T> : IEasyStorage<T, Guid>
+	public abstract class IEasyCacheStorage<TEntity> : IEasyStorage<TEntity, Guid>
 	{
 		readonly MemoryCache _cache;
 		static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new ConcurrentDictionary<string, SemaphoreSlim>();
@@ -50,9 +51,9 @@ namespace System.Data
 			return obj.Id;
 		}
 
-		public async Task<T> LoadAsync(Guid idstring)
+		public async Task<TEntity> LoadAsync(Guid idstring)
 		{
-			return await LoadAsync<T>(idstring);
+			return await LoadAsync<TEntity>(idstring);
 		}
 
 		public async Task<TResult> LoadAsync<TResult>(Guid id)
@@ -75,13 +76,13 @@ namespace System.Data
 			}
 		}
 
-		public void Delete(Guid id)
+		public async Task DeleteAsync(Guid id)
 		{
 			var idstring = id.ToString();
 			var _lock = _locks.GetOrAdd(idstring, _ => new SemaphoreSlim(1, 1));
 			try
 			{
-				_lock.Wait();
+				await _lock.WaitAsync();
 				_cache.Remove(idstring);
 				_locks.TryRemove(idstring, out _lock);
 			}
@@ -89,9 +90,9 @@ namespace System.Data
 			finally { _lock.Release(); }
 		}
 
-		public async Task<List<T>> AllAsync()
+		public async Task<List<TEntity>> AllAsync()
 		{
-			var r = new List<T>();
+			var r = new List<TEntity>();
 			var keys = _locks.Keys;
 			foreach (var key in keys)
 			{
@@ -101,9 +102,59 @@ namespace System.Data
 			return r;
 		}
 
-		public async Task<List<T>> FindAsync(Func<T, bool> predicate)
+		public async Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
 		{
-			return (await AllAsync() ?? new List<T>())?.Where(predicate)?.ToList() ?? new List<T>();
+			return (await AllAsync() ?? new List<TEntity>())?.AsQueryable()?.Where(predicate)?.ToList() ?? new List<TEntity>();
+		}
+
+		public async Task<EasyPaging<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
+		{
+			var result = new EasyPaging<TEntity>(pageNumber, pageSize);
+			var rows = await FindAsync(predicate);
+			result.Count = rows.Count();
+			result.Rows = rows.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+			return result;
+		}
+		public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+		{
+			var rows = await FindAsync(predicate);
+			return rows != null ? rows.FirstOrDefault() : default(TEntity);
+		}
+
+
+		public Guid Save(EasyStorableObject<Guid> obj)
+		{
+			return SaveAsync(obj).GetAwaiter().GetResult();
+		}
+
+		public TEntity Load(Guid id)
+		{
+			return LoadAsync(id).GetAwaiter().GetResult();
+		}
+
+		public void Delete(Guid id)
+		{
+			DeleteAsync(id).Wait();
+		}
+
+		public List<TEntity> All()
+		{
+			return AllAsync().GetAwaiter().GetResult();
+		}
+
+		public EasyPaging<TEntity> Find(Expression<Func<TEntity, bool>> predicate, int pageNumber = 1, int pageSize = 20)
+		{
+			return FindAsync(predicate, pageNumber, pageSize).GetAwaiter().GetResult();
+		}
+
+		public List<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FindAsync(predicate).GetAwaiter().GetResult();
+		}
+
+		public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
+		{
+			return FirstOrDefaultAsync(predicate).GetAwaiter().GetResult();
 		}
 	}
 }
